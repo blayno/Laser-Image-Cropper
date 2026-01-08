@@ -9,4 +9,6 @@ I am not responsible for any damage, malfunction, or personal injury that may re
 
 ![Screenshot](images/Capture1.PNG)
 
+![Screenshot](images/Capture2.PNG)
+
 
