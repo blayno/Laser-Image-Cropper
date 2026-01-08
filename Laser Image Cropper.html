@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Laser Image Cropper</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background:#1e1e1e;
+    color:#ddd;
+    display:flex;
+    justify-content:center; /* center horizontally */
+    align-items:center;       /* vertical center */
+    align-items:flex-start;
+    padding:20px;
+    height:100vh;
+    box-sizing:border-box;
+}
+
+.container {
+    display:flex;
+    gap:40px; /* space between controls and canvas */
+}
+
+.controls {
+    display:flex;
+    flex-direction:column;
+    min-width:200px;
+}
+
+.controls input,
+.controls select,
+.controls button {
+    margin: 5px 0;
+}
+
+canvas {
+    background:#333;
+    cursor: grab;
+    border:1px solid #555;
+    width: 400px;    /* Force square */
+    height: 400px;   /* Force square */
+    flex-shrink: 0;  /* Don't allow flex to resize */
+}
+
+
+#outputInfo {
+    margin-top:6px;
+    font-size:13px;
+    color:#9fd;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- LEFT: Controls -->
+    <div class="controls">
+		
+        <input type="file" id="fileInput" accept="image/*"><br>
+
+        Shape<br>
+        <select id="shape">
+            <option value="circle">Circle</option>
+            <option value="square">Square</option>
+            <option value="rounded">Rounded Square</option>
+        </select><br>
+		<div id="outputInfo">—</div>
+        Size<br>
+        <input type="range" id="size" min="50" max="400" value="400"><br>		
+		<div style="display:flex; align-items:center; gap:5px;">
+			<input type="number" id="sizeNumber" value="400" style="width:80px">
+			<select id="sizeUnit">
+				<option value="px">px</option>
+				<option value="mm">mm</option>
+			</select>
+		</div>
+        </select>
+        DPI
+        <input type="number" id="dpi" value="96" style="width:70px"><br>
+
+        Corner Radius (Rounded)<br>
+        <input type="range" id="radius" min="0" max="200" value="40"><br>
+
+        Zoom<br>
+        <input type="range" id="zoom" min="0.2" max="3" step="0.01" value="1"><br>
+
+        <button id="exportBtn">Export Cropped Image</button>
+		
+    </div>
+
+    <!-- RIGHT: Canvas -->
+	
+	<!-- RIGHT: Canvas -->
+	<div class="canvas-wrapper" style="display:flex; flex-direction:column; align-items:center;">
+		<h2>Laser Image Cropper</h2> <!-- Label above canvas -->
+		<canvas id="canvas" width="400" height="400"></canvas>
+	</div>
+
+	
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const fileInput = document.getElementById("fileInput");
+const shapeSel = document.getElementById("shape");
+const sizeSlider = document.getElementById("size");
+const sizeNumber = document.getElementById("sizeNumber");
+const sizeUnit = document.getElementById("sizeUnit");
+const dpiInput = document.getElementById("dpi");
+const radiusSlider = document.getElementById("radius");
+const zoomSlider = document.getElementById("zoom");
+const exportBtn = document.getElementById("exportBtn");
+const outputInfo = document.getElementById("outputInfo");
+
+const CANVAS_SIZE = canvas.width;
+
+let cropSize = CANVAS_SIZE;
+let cornerRadius = 40;
+let scale = 1;
+let imgX = 0, imgY = 0;
+let img = new Image();
+
+let dragging = false;
+let lastX = 0, lastY = 0;
+
+/* ---------- UNIT CONVERSION ---------- */
+function mmToPx(mm) {
+    return (mm / 25.4) * parseFloat(dpiInput.value || 96);
+}
+
+function pxToMm(px) {
+    return (px / parseFloat(dpiInput.value || 96)) * 25.4;
+}
+
+/* ---------- SHAPE PATH ---------- */
+function buildShapePath(ctx, size, radius, shape) {
+    const x = (CANVAS_SIZE - size) / 2;
+    const y = (CANVAS_SIZE - size) / 2;
+
+    ctx.beginPath();
+
+    if (shape === "circle") {
+        ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, size / 2, 0, Math.PI * 2);
+    } else if (shape === "square") {
+        ctx.rect(x, y, size, size);
+    } else { // rounded
+        const r = Math.min(radius, size / 2);
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + size, y, x + size, y + size, r);
+        ctx.arcTo(x + size, y + size, x, y + size, r);
+        ctx.arcTo(x, y + size, x, y, r);
+        ctx.arcTo(x, y, x + size, y, r);
+    }
+
+    ctx.closePath();
+}
+
+/* ---------- OUTPUT INFO ---------- */
+function updateOutputInfo() {
+    const px = cropSize;
+    const mm = pxToMm(px).toFixed(2);
+    const shape = shapeSel.value;
+
+    let label =
+        shape === "circle" ? "Ø" :
+        shape === "square" ? "Square" :
+        "Rounded";
+
+    if (sizeUnit.value === "mm") {
+        outputInfo.textContent = `${label} ${mm} mm → ${px} px`;
+    } else {
+        outputInfo.textContent = `${label} ${px} px → ${mm} mm`;
+    }
+}
+
+/* ---------- DRAW ---------- */
+function draw() {
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+    ctx.save();
+    buildShapePath(ctx, cropSize, cornerRadius, shapeSel.value);
+    ctx.clip();
+
+    ctx.drawImage(img, imgX, imgY, img.width * scale, img.height * scale);
+    ctx.restore();
+
+    buildShapePath(ctx, cropSize, cornerRadius, shapeSel.value);
+    ctx.strokeStyle = "#00ffcc";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    updateOutputInfo();
+}
+
+/* ---------- IMAGE LOAD ---------- */
+fileInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        img.onload = () => {
+            scale = Math.max(cropSize / img.width, cropSize / img.height);
+            zoomSlider.value = scale;
+            imgX = (CANVAS_SIZE - img.width * scale) / 2;
+            imgY = (CANVAS_SIZE - img.height * scale) / 2;
+            draw();
+        };
+        img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+/* ---------- CONTROLS ---------- */
+zoomSlider.addEventListener("input", () => {
+    const old = scale;
+    scale = parseFloat(zoomSlider.value);
+    const c = CANVAS_SIZE / 2;
+    imgX = c - (c - imgX) * (scale / old);
+    imgY = c - (c - imgY) * (scale / old);
+    draw();
+});
+
+sizeSlider.addEventListener("input", () => {
+    cropSize = parseInt(sizeSlider.value);
+    sizeNumber.value = sizeUnit.value === "mm" ? pxToMm(cropSize).toFixed(2) : cropSize;
+    draw();
+});
+
+sizeNumber.addEventListener("input", () => {
+    let val = parseFloat(sizeNumber.value);
+    if (isNaN(val) || val <= 0) return;
+
+    let px = sizeUnit.value === "mm" ? mmToPx(val) : val;
+    px = Math.round(px);
+
+    cropSize = Math.max(10, Math.min(CANVAS_SIZE, px));
+    sizeSlider.value = cropSize;
+    draw();
+});
+
+sizeUnit.addEventListener("change", () => {
+    sizeNumber.value = sizeUnit.value === "mm" ? pxToMm(cropSize).toFixed(2) : cropSize;
+    updateOutputInfo();
+});
+
+dpiInput.addEventListener("input", () => {
+    if (sizeUnit.value === "mm") {
+        cropSize = Math.round(mmToPx(parseFloat(sizeNumber.value)));
+        sizeSlider.value = cropSize;
+        draw();
+    }
+});
+
+radiusSlider.addEventListener("input", () => {
+    cornerRadius = parseInt(radiusSlider.value);
+    draw();
+});
+
+shapeSel.addEventListener("change", draw);
+
+/* ---------- DRAG ---------- */
+canvas.addEventListener("mousedown", e => {
+    dragging = true;
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+    canvas.style.cursor = "grabbing";
+});
+
+canvas.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    imgX += e.offsetX - lastX;
+    imgY += e.offsetY - lastY;
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+    draw();
+});
+
+canvas.addEventListener("mouseup", () => {
+    dragging = false;
+    canvas.style.cursor = "grab";
+});
+canvas.addEventListener("mouseleave", () => dragging = false);
+
+/* ---------- EXPORT ---------- */
+exportBtn.addEventListener("click", () => {
+    const out = document.createElement("canvas");
+    out.width = cropSize;
+    out.height = cropSize;
+    const octx = out.getContext("2d");
+
+    buildShapePath(octx, cropSize, cornerRadius, shapeSel.value);
+    octx.clip();
+
+    const offset = (CANVAS_SIZE - cropSize) / 2;
+    octx.drawImage(img, imgX - offset, imgY - offset, img.width * scale, img.height * scale);
+
+    const link = document.createElement("a");
+    link.download = "crop.png";
+    link.href = out.toDataURL("image/png");
+    link.click();
+});
+
+/* ---------- INIT ---------- */
+updateOutputInfo();
+</script>
+
+</body>
+</html>
+Written by Blayne Hixson and Chat GPT
