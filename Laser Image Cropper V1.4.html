@@ -88,11 +88,12 @@ canvas {
         Corner Radius (Rounded)<br>
         <input type="range" id="radius" min="0" max="200" value="40"><br>
 		
-		Star Points<br>
-		<input type="number" id="starPoints" value="5" min="3" max="20" style="width:70px"><br>
-
-
-        
+        <br>
+		<div style="display: flex; align-items: center; gap: 10px;">
+		<label for="starPoints">Star Points:</label>
+		<span id="starPointsValue" style="font-size:13px; color:#9fd;">5</span>
+		</div>
+		<input type="range" id="starPoints" min="3" max="20" value="5">
 
         <button id="exportBtn">Export Cropped Image</button>
 		
@@ -139,11 +140,11 @@ let dragging = false;
 let lastX = 0, lastY = 0;
 
 /*-----------Listener star value---------------*/
+const starPointsValue = document.getElementById("starPointsValue");
+
 starPointsInput.addEventListener("input", () => {
-    let val = parseInt(starPointsInput.value);
-    if (isNaN(val) || val < 3) val = 3;
-    if (val > 20) val = 20;
-    starPointsInput.value = val;
+    const val = parseInt(starPointsInput.value);
+    starPointsValue.textContent = val;
     draw();
 });
 
