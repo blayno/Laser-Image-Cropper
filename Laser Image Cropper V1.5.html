@@ -66,6 +66,8 @@ canvas {
             <option value="rounded">Rounded Square</option>
 			<option value="heart">Heart</option> <!-- New -->
 			<option value="star">Star</option> <!--New-->
+			<option value="dogtag">Dog Tag</option> <!--New-->
+
 
         </select><br>
 		<div id="outputInfo">—</div>
@@ -274,6 +276,38 @@ function buildShapePath(ctx, size, radius, shape) {
 		ctx.restore();
 	}
 
+	else if (shape === "dogtag") {
+		const cx = CANVAS_SIZE / 2;
+		const cy = CANVAS_SIZE / 2;
+		const width = size * 0.6;
+		const height = size;
+		const x = cx - width / 2;
+		const y = cy - height / 2;
+
+		// Make corners more rounded like a real dog tag
+		const maxRadius = Math.min(width, height) * 1; // almost half of width/height
+		const r = Math.min(cornerRadius, maxRadius);
+
+		// Draw rounded rectangle
+		ctx.moveTo(x + r, y);
+		ctx.arcTo(x + width, y, x + width, y + height, r);
+		ctx.arcTo(x + width, y + height, x, y + height, r);
+		ctx.arcTo(x, y + height, x, y, r);
+		ctx.arcTo(x, y, x + width, y, r);
+
+		// Draw small hole at top for chain
+		const holeRadius = size * 0.03;        // size of hole
+		const holeOffset = size * 0.13;        // distance from top edge
+		const holeY = y + holeOffset + holeRadius; // fixed position
+		ctx.moveTo(cx + holeRadius, holeY);
+		ctx.arc(cx, holeY, holeRadius, 0, Math.PI * 2);
+
+		// IMPORTANT: when clipping later in draw(), use even-odd rule
+		// ctx.clip("evenodd"); 
+		// This ensures the hole blocks the image
+	}
+
+
 
     ctx.closePath();
 }
@@ -304,7 +338,7 @@ function draw() {
 
     ctx.save();
     buildShapePath(ctx, cropSize, cornerRadius, shapeSel.value);
-    ctx.clip();
+    ctx.clip("evenodd");
 
     if (img.src) {
         ctx.drawImage(img, imgX, imgY, img.width * scale, img.height * scale);
