@@ -185,42 +185,41 @@ function buildShapePath(ctx, size, radius, shape) {
 
     } else if (shape === "heart") {
 
-        const scaleX = 1.2;
-        const scaleY = 1.28;
+    const scaleX = 1.2;
+    const scaleY = 1.34;
 
-        const top = y + size * 0.35;
-        const lobeY = y;
-        const bottom = y + size;
-        const left = x;
-        const right = x + size;
+    const top = y + size * 0.35;
+    const lobeY = y;
+    const bottom = y + size;
+    const left = x;
+    const right = x + size;
 
-        ctx.save();
+    ctx.save();
 
-        // scale about center
-        ctx.translate(cx, cy);
-        ctx.scale(scaleX, scaleY);
-        ctx.translate(-cx, -cy);
+    // 🔒 scale about the heart tip (bottom center)
+    ctx.translate(cx, bottom);
+    ctx.scale(scaleX, scaleY);
+    ctx.translate(-cx, -bottom);
 
-        // keep tip on bottom of bounding box
-        const scaledBottom = cy + (bottom - cy) * scaleY;
-        const offsetY = bottom - scaledBottom;
-        ctx.translate(0, offsetY);
+    ctx.beginPath();
+    ctx.moveTo(cx, bottom);
 
-        ctx.moveTo(cx, bottom);
+    ctx.bezierCurveTo(
+        cx + size * 0.6, y + size * 0.75,
+        right, lobeY,
+        cx, top
+    );
 
-        ctx.bezierCurveTo(
-            cx + size * 0.6, y + size * 0.75,
-            right, lobeY,
-            cx, top
-        );
+    ctx.bezierCurveTo(
+        left, lobeY,
+        cx - size * 0.6, y + size * 0.75,
+        cx, bottom
+    );
 
-        ctx.bezierCurveTo(
-            left, lobeY,
-            cx - size * 0.6, y + size * 0.75,
-            cx, bottom
-        );
+    
+    ctx.restore();
 
-        ctx.restore();
+
 
 } else if (shape === "star") {
 
