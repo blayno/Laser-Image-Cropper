@@ -318,11 +318,14 @@ function updateOutputInfo() {
     const mm = pxToMm(px).toFixed(2);
     const shape = shapeSel.value;
 
-    let label =
-        shape === "circle" ? "Ø" :
-        shape === "square" ? "□" :
-        shape === "rounded" ? "Rounded" :
-        "♥";
+let label =
+    shape === "circle"  ? "Ø" :
+    shape === "square"  ? "□" :
+    shape === "rounded" ? "Rounded" :
+    shape === "star"    ? "★" :
+    shape === "dogtag"  ? "Dog Tag" :
+    "♥";
+
 
     if (sizeUnit.value === "mm") {
         outputInfo.textContent = `${label} ${mm} mm → ${px} px`;
@@ -449,7 +452,8 @@ exportBtn.addEventListener("click", () => {
     const octx = out.getContext("2d");
 
     buildShapePath(octx, cropSize, cornerRadius, shapeSel.value);
-    octx.clip();
+    octx.clip("evenodd");
+
 
     const offset = (CANVAS_SIZE - cropSize) / 2;
     octx.drawImage(img, imgX - offset, imgY - offset, img.width * scale, img.height * scale);
