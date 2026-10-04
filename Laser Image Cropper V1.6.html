@@ -1,0 +1,2888 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Mad Hat Laser Image Cropper</title>
+
+<style>
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #151515;
+    color: #ddd;
+}
+
+
+/* =========================================================
+   MAIN APP
+   ========================================================= */
+
+.app {
+    width: 100%;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.header {
+    height: 72px;
+    min-height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #202020;
+    border-bottom: 1px solid #333;
+
+    position: relative;
+
+    flex-shrink: 0;
+}
+
+.header-title {
+    text-align: center;
+}
+
+.header-title h1 {
+    margin: 0;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    color: #f0a500;
+    letter-spacing: 1px;
+}
+
+.header-title span {
+    display: block;
+
+    margin-top: 4px;
+
+    font-size: 11px;
+    color: #888;
+
+    letter-spacing: 2px;
+}
+
+.brand {
+    position: absolute;
+    left: 20px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    font-size: 13px;
+    font-weight: bold;
+
+    color: #f0a500;
+}
+
+.brand img {
+    width: 34px;
+    height: 34px;
+
+    object-fit: contain;
+
+    display: block;
+}
+
+
+/* =========================================================
+   WORKSPACE
+   ========================================================= */
+
+.workspace {
+    flex: 1;
+
+    display: flex;
+
+    gap: 20px;
+
+    padding: 20px;
+
+    min-height: 0;
+    height: calc(100vh - 102px);
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   CONTROL PANEL
+   ========================================================= */
+
+.controls {
+    width: 320px;
+    min-width: 320px;
+
+    height: 100%;
+
+    background: #202020;
+
+    border: 1px solid #333;
+    border-radius: 8px;
+
+    padding: 18px;
+
+    /*
+       IMPORTANT:
+       Only the left panel scrolls.
+       The main image remains fixed.
+    */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    flex-shrink: 0;
+
+    scrollbar-width: thin;
+    scrollbar-color: #555 #202020;
+}
+
+
+/* Chrome / Edge scrollbar */
+
+.controls::-webkit-scrollbar {
+    width: 8px;
+}
+
+.controls::-webkit-scrollbar-track {
+    background: #202020;
+}
+
+.controls::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.controls::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+
+.section {
+    margin-bottom: 18px;
+}
+
+.section-title {
+    margin-bottom: 8px;
+
+    color: #f0a500;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    letter-spacing: 1px;
+
+    text-transform: uppercase;
+}
+
+label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-size: 12px;
+    color: #aaa;
+}
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+input[type="file"],
+input[type="number"],
+select {
+    width: 100%;
+
+    background: #111;
+
+    border: 1px solid #444;
+    border-radius: 4px;
+
+    color: #ddd;
+
+    padding: 8px;
+}
+
+input[type="number"]:focus,
+select:focus {
+    outline: none;
+
+    border-color: #f0a500;
+}
+
+
+/* =========================================================
+   RANGE SLIDERS
+   ========================================================= */
+
+.range-row {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 10px;
+}
+
+.range-row input[type="range"] {
+    flex: 1;
+}
+
+.range-value {
+    width: 55px;
+
+    text-align: right;
+
+    font-size: 12px;
+
+    color: #9fd;
+}
+
+input[type="range"] {
+    accent-color: #f0a500;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.button-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 7px;
+}
+
+button {
+    border: 1px solid #555;
+
+    background: #292929;
+
+    color: #ddd;
+
+    padding: 9px 10px;
+
+    border-radius: 4px;
+
+    cursor: pointer;
+
+    font-size: 12px;
+}
+
+button:hover {
+    background: #353535;
+    border-color: #f0a500;
+}
+
+button.primary {
+    background: #f0a500;
+
+    color: #111;
+
+    border-color: #f0a500;
+
+    font-weight: bold;
+}
+
+button.primary:hover {
+    background: #ffb719;
+}
+
+
+/* =========================================================
+   CHECKBOXES
+   ========================================================= */
+
+.check-row {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin: 7px 0;
+
+    font-size: 12px;
+    color: #bbb;
+}
+
+.check-row input {
+    accent-color: #f0a500;
+}
+
+
+/* =========================================================
+   OUTPUT INFO
+   ========================================================= */
+
+.output-info {
+    background: #161616;
+
+    border: 1px solid #333;
+
+    border-radius: 5px;
+
+    padding: 10px;
+
+    margin-top: 8px;
+
+    font-size: 12px;
+
+    color: #9fd;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   CANVAS AREA
+   ========================================================= */
+
+.canvas-area {
+    flex: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   CANVAS WRAPPER
+   ========================================================= */
+
+.canvas-wrapper {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: min(75vh, 700px);
+    height: min(75vh, 700px);
+
+    min-width: 300px;
+    min-height: 300px;
+
+    max-width: 80vw;
+    max-height: calc(100vh - 170px);
+
+    border: 1px solid #444;
+
+    background-color: #2b2b2b;
+
+    /*
+       Checkerboard
+    */
+
+    background-image:
+        linear-gradient(
+            45deg,
+            #333 25%,
+            transparent 25%
+        ),
+        linear-gradient(
+            -45deg,
+            #333 25%,
+            transparent 25%
+        ),
+        linear-gradient(
+            45deg,
+            transparent 75%,
+            #333 75%
+        ),
+        linear-gradient(
+            -45deg,
+            transparent 75%,
+            #333 75%
+        );
+
+    background-size: 24px 24px;
+
+    background-position:
+        0 0,
+        0 12px,
+        12px -12px,
+        -12px 0;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   CANVAS
+   ========================================================= */
+
+#canvas {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    cursor: grab;
+}
+
+#canvas.grabbing {
+    cursor: grabbing;
+}
+
+
+/* =========================================================
+   CANVAS INFO
+   ========================================================= */
+
+.canvas-info {
+    margin-top: 10px;
+
+    color: #777;
+
+    font-size: 11px;
+
+    text-align: center;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.footer {
+    height: 30px;
+    min-height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #202020;
+
+    border-top: 1px solid #333;
+
+    font-size: 11px;
+
+    color: #666;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   HIDDEN
+   ========================================================= */
+
+.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .workspace {
+        flex-direction: column;
+
+        height: calc(100vh - 102px);
+
+        overflow: hidden;
+    }
+
+    .controls {
+        width: 100%;
+        min-width: 0;
+
+        height: 45vh;
+        max-height: 45vh;
+
+        flex-shrink: 0;
+    }
+
+    .canvas-area {
+        flex: 1;
+
+        width: 100%;
+        min-height: 0;
+
+        height: auto;
+    }
+
+    .canvas-wrapper {
+        width: min(90vw, 600px);
+        height: min(90vw, 600px);
+
+        min-width: 250px;
+        min-height: 250px;
+
+        max-width: 90vw;
+        max-height: 90%;
+    }
+
+    .brand {
+        display: none;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+
+<header class="header">
+
+<div class="brand">
+    <img src="images/madhat-cnc-logo.png" alt="Mad Hat Logo">
+    <span>MAD HAT</span>
+</div>
+
+    <div class="header-title">
+
+        <h1>LASER IMAGE CROPPER</h1>
+
+        <span>
+            IMAGE PREPARATION TOOL
+        </span>
+
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     WORKSPACE
+     ===================================================== -->
+
+<main class="workspace">
+
+
+<!-- =================================================
+     CONTROLS
+     ================================================= -->
+
+<aside class="controls">
+
+
+<!-- FILE -->
+
+<div class="section">
+
+    <div class="section-title">
+        Image
+    </div>
+
+    <input
+        type="file"
+        id="fileInput"
+        accept="image/*"
+    >
+
+</div>
+
+
+<!-- SHAPE -->
+
+<div class="section">
+
+    <div class="section-title">
+        Crop Shape
+    </div>
+
+    <select id="shape">
+
+        <option value="circle">
+            Circle
+        </option>
+
+        <option value="square">
+            Square
+        </option>
+
+        <option value="rounded">
+            Rounded Square
+        </option>
+
+        <option value="heart">
+            Heart
+        </option>
+
+        <option value="star">
+            Star
+        </option>
+
+        <option value="dogtag">
+            Dog Tag
+        </option>
+
+    </select>
+
+</div>
+
+
+<!-- SIZE -->
+
+<div class="section">
+
+    <div class="section-title">
+        Output Size
+    </div>
+
+    <label>
+        Size
+    </label>
+
+    <div class="range-row">
+
+        <input
+            type="range"
+            id="size"
+            min="50"
+            max="400"
+            value="400"
+        >
+
+        <span
+            id="sizeSliderValue"
+            class="range-value"
+        >
+            400
+        </span>
+
+    </div>
+
+
+    <div
+        style="
+            display:flex;
+            gap:6px;
+        "
+    >
+
+        <input
+            type="number"
+            id="sizeNumber"
+            value="400"
+            min="1"
+        >
+
+        <select
+            id="sizeUnit"
+            style="width:80px"
+        >
+
+            <option value="px">
+                px
+            </option>
+
+            <option value="mm">
+                mm
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <label style="margin-top:10px">
+        DPI
+    </label>
+
+    <input
+        type="number"
+        id="dpi"
+        value="96"
+        min="1"
+    >
+
+
+    <div
+        id="outputInfo"
+        class="output-info"
+    >
+        —
+    </div>
+
+</div>
+
+
+<!-- IMAGE POSITION -->
+
+<div class="section">
+
+    <div class="section-title">
+        Image Position
+    </div>
+
+    <label>
+        Zoom
+    </label>
+
+    <div class="range-row">
+
+        <input
+            type="range"
+            id="zoom"
+            min="0.05"
+            max="5"
+            step="0.01"
+            value="1"
+        >
+
+        <span
+            id="zoomValue"
+            class="range-value"
+        >
+            1.00×
+        </span>
+
+    </div>
+
+
+    <div class="button-grid">
+
+        <button id="fitBtn">
+            Fit Image
+        </button>
+
+        <button id="resetBtn">
+            Reset
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- TRANSFORM -->
+
+<div class="section">
+
+    <div class="section-title">
+        Transform
+    </div>
+
+    <div class="button-grid">
+
+        <button id="rotateBtn">
+            ↻ Rotate 90°
+        </button>
+
+        <button id="flipHBtn">
+            ↔ Flip H
+        </button>
+
+        <button id="flipVBtn">
+            ↕ Flip V
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ROUNDED CORNERS -->
+
+<div
+    id="radiusSection"
+    class="section hidden"
+>
+
+    <div class="section-title">
+        Corner Radius
+    </div>
+
+    <div class="range-row">
+
+        <input
+            type="range"
+            id="radius"
+            min="0"
+            max="200"
+            value="40"
+        >
+
+        <span
+            id="radiusValue"
+            class="range-value"
+        >
+            40
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- STAR -->
+
+<div
+    id="starSection"
+    class="section hidden"
+>
+
+    <div class="section-title">
+        Star
+    </div>
+
+    <div class="range-row">
+
+        <input
+            type="range"
+            id="starPoints"
+            min="3"
+            max="20"
+            value="5"
+        >
+
+        <span
+            id="starPointsValue"
+            class="range-value"
+        >
+            5
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- IMAGE ADJUSTMENTS -->
+
+<div class="section">
+
+    <div class="section-title">
+        Image Adjustments
+    </div>
+
+
+    <label>
+        Brightness
+    </label>
+
+    <div class="range-row">
+
+        <input
+            type="range"
+            id="brightness"
+            min="50"
+            max="150"
+            value="100"
+        >
+
+        <span
+            id="brightnessValue"
+            class="range-value"
+        >
+            100%
+        </span>
+
+    </div>
+
+
+    <label>
+        Contrast
+    </label>
+
+    <div class="range-row">
+
+        <input
+            type="range"
+            id="contrast"
+            min="50"
+            max="200"
+            value="100"
+        >
+
+        <span
+            id="contrastValue"
+            class="range-value"
+        >
+            100%
+        </span>
+
+    </div>
+
+
+    <label class="check-row">
+
+        <input
+            type="checkbox"
+            id="grayscale"
+        >
+
+        Grayscale
+
+    </label>
+
+
+    <label class="check-row">
+
+        <input
+            type="checkbox"
+            id="invert"
+        >
+
+        Invert
+
+    </label>
+
+
+    <label class="check-row">
+
+        <input
+            type="checkbox"
+            id="transparent"
+            checked
+        >
+
+        Transparent background
+
+    </label>
+
+</div>
+
+
+<!-- EXPORT -->
+
+<div class="section">
+
+    <div class="section-title">
+        Export
+    </div>
+
+    <button
+        id="exportBtn"
+        class="primary"
+        style="width:100%"
+    >
+        Export Cropped PNG
+    </button>
+
+</div>
+
+
+</aside>
+
+
+<!-- =================================================
+     CANVAS
+     ================================================= -->
+
+<section class="canvas-area">
+
+    <div class="canvas-wrapper">
+
+        <canvas
+            id="canvas"
+            width="400"
+            height="400"
+        ></canvas>
+
+    </div>
+
+    <div class="canvas-info">
+
+        Drag image to position •
+        Mouse wheel to zoom •
+        R = Rotate •
+        H/V = Flip •
+        F = Fit
+
+    </div>
+
+</section>
+
+
+</main>
+
+
+<!-- =====================================================
+     FOOTER
+     ===================================================== -->
+
+<footer class="footer">
+
+    Mad Hat Laser Tools • Image Cropper
+
+</footer>
+
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   ELEMENTS
+   ========================================================= */
+
+const canvas =
+    document.getElementById("canvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+const fileInput =
+    document.getElementById("fileInput");
+
+const shapeSel =
+    document.getElementById("shape");
+
+const sizeSlider =
+    document.getElementById("size");
+
+const sizeSliderValue =
+    document.getElementById("sizeSliderValue");
+
+const sizeNumber =
+    document.getElementById("sizeNumber");
+
+const sizeUnit =
+    document.getElementById("sizeUnit");
+
+const dpiInput =
+    document.getElementById("dpi");
+
+const zoomSlider =
+    document.getElementById("zoom");
+
+const zoomValue =
+    document.getElementById("zoomValue");
+
+const radiusSlider =
+    document.getElementById("radius");
+
+const radiusValue =
+    document.getElementById("radiusValue");
+
+const starPointsInput =
+    document.getElementById("starPoints");
+
+const starPointsValue =
+    document.getElementById("starPointsValue");
+
+const brightnessSlider =
+    document.getElementById("brightness");
+
+const brightnessValue =
+    document.getElementById("brightnessValue");
+
+const contrastSlider =
+    document.getElementById("contrast");
+
+const contrastValue =
+    document.getElementById("contrastValue");
+
+const grayscaleInput =
+    document.getElementById("grayscale");
+
+const invertInput =
+    document.getElementById("invert");
+
+const transparentInput =
+    document.getElementById("transparent");
+
+const outputInfo =
+    document.getElementById("outputInfo");
+
+const radiusSection =
+    document.getElementById("radiusSection");
+
+const starSection =
+    document.getElementById("starSection");
+
+const fitBtn =
+    document.getElementById("fitBtn");
+
+const resetBtn =
+    document.getElementById("resetBtn");
+
+const rotateBtn =
+    document.getElementById("rotateBtn");
+
+const flipHBtn =
+    document.getElementById("flipHBtn");
+
+const flipVBtn =
+    document.getElementById("flipVBtn");
+
+const exportBtn =
+    document.getElementById("exportBtn");
+
+
+/* =========================================================
+   CONSTANTS
+   ========================================================= */
+
+const CANVAS_SIZE = 400;
+
+
+/* =========================================================
+   STATE
+   ========================================================= */
+
+let cropSize = 400;
+
+let cornerRadius = 40;
+
+let scale = 1;
+
+let imgX = 0;
+
+let imgY = 0;
+
+let rotation = 0;
+
+let flipH = 1;
+
+let flipV = 1;
+
+let img = new Image();
+
+let imageLoaded = false;
+
+let dragging = false;
+
+let lastX = 0;
+
+let lastY = 0;
+
+let baseScale = 1;
+
+
+/* =========================================================
+   UNIT CONVERSION
+   ========================================================= */
+
+function getDPI() {
+
+    const dpi =
+        parseFloat(dpiInput.value);
+
+    return dpi > 0 ? dpi : 96;
+
+}
+
+
+function mmToPx(mm) {
+
+    return (
+        mm / 25.4
+    ) * getDPI();
+
+}
+
+
+function pxToMm(px) {
+
+    return (
+        px / getDPI()
+    ) * 25.4;
+
+}
+
+
+/* =========================================================
+   SHAPE PATH
+   ========================================================= */
+
+function buildShapePath(
+    context,
+    size,
+    radius,
+    shape,
+    offsetX = 0,
+    offsetY = 0
+) {
+
+    const cx =
+        CANVAS_SIZE / 2 + offsetX;
+
+    const cy =
+        CANVAS_SIZE / 2 + offsetY;
+
+    const x =
+        cx - size / 2;
+
+    const y =
+        cy - size / 2;
+
+
+    context.beginPath();
+
+
+    /* -----------------------------------------------------
+       CIRCLE
+       ----------------------------------------------------- */
+
+    if (shape === "circle") {
+
+        context.arc(
+            cx,
+            cy,
+            size / 2,
+            0,
+            Math.PI * 2
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       SQUARE
+       ----------------------------------------------------- */
+
+    else if (shape === "square") {
+
+        context.rect(
+            x,
+            y,
+            size,
+            size
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       ROUNDED SQUARE
+       ----------------------------------------------------- */
+
+    else if (shape === "rounded") {
+
+        const r =
+            Math.min(
+                radius,
+                size / 2
+            );
+
+        context.moveTo(
+            x + r,
+            y
+        );
+
+        context.arcTo(
+            x + size,
+            y,
+            x + size,
+            y + size,
+            r
+        );
+
+        context.arcTo(
+            x + size,
+            y + size,
+            x,
+            y + size,
+            r
+        );
+
+        context.arcTo(
+            x,
+            y + size,
+            x,
+            y,
+            r
+        );
+
+        context.arcTo(
+            x,
+            y,
+            x + size,
+            y,
+            r
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       HEART
+       ----------------------------------------------------- */
+
+    else if (shape === "heart") {
+
+        const top =
+            y + size * 0.25;
+
+        const bottom =
+            y + size;
+
+        context.moveTo(
+            cx,
+            bottom
+        );
+
+        context.bezierCurveTo(
+            cx - size * 0.58,
+            y + size * 0.62,
+
+            x,
+            y + size * 0.18,
+
+            cx - size * 0.27,
+            y + size * 0.08
+        );
+
+        context.bezierCurveTo(
+            cx - size * 0.08,
+            y - size * 0.02,
+
+            cx,
+            y + size * 0.12,
+
+            cx,
+            top
+        );
+
+        context.bezierCurveTo(
+            cx,
+            y + size * 0.12,
+
+            cx + size * 0.08,
+            y - size * 0.02,
+
+            cx + size * 0.27,
+            y + size * 0.08
+        );
+
+        context.bezierCurveTo(
+            x + size,
+            y + size * 0.18,
+
+            cx + size * 0.58,
+            y + size * 0.62,
+
+            cx,
+            bottom
+        );
+
+    }
+
+
+    /* -----------------------------------------------------
+       STAR
+       ----------------------------------------------------- */
+
+    else if (shape === "star") {
+
+        const spikes =
+            parseInt(
+                starPointsInput.value
+            ) || 5;
+
+        const outer =
+            size / 2;
+
+        const inner =
+            outer * 0.45;
+
+        const step =
+            Math.PI / spikes;
+
+        const rotation =
+            -Math.PI / 2;
+
+
+        for (
+            let i = 0;
+            i < spikes * 2;
+            i++
+        ) {
+
+            const r =
+                i % 2 === 0
+                    ? outer
+                    : inner;
+
+            const angle =
+                rotation +
+                i * step;
+
+            const px =
+                cx +
+                Math.cos(angle) * r;
+
+            const py =
+                cy +
+                Math.sin(angle) * r;
+
+
+            if (i === 0) {
+
+                context.moveTo(
+                    px,
+                    py
+                );
+
+            } else {
+
+                context.lineTo(
+                    px,
+                    py
+                );
+
+            }
+
+        }
+
+        context.closePath();
+
+    }
+
+
+    /* -----------------------------------------------------
+       DOG TAG
+       ----------------------------------------------------- */
+
+    else if (shape === "dogtag") {
+
+        const width =
+            size * 0.62;
+
+        const height =
+            size;
+
+        const dx =
+            cx - width / 2;
+
+        const dy =
+            cy - height / 2;
+
+        const r =
+            Math.min(
+                radius,
+                width / 2,
+                height / 2
+            );
+
+
+        context.moveTo(
+            dx + r,
+            dy
+        );
+
+        context.arcTo(
+            dx + width,
+            dy,
+            dx + width,
+            dy + height,
+            r
+        );
+
+        context.arcTo(
+            dx + width,
+            dy + height,
+            dx,
+            dy + height,
+            r
+        );
+
+        context.arcTo(
+            dx,
+            dy + height,
+            dx,
+            dy,
+            r
+        );
+
+        context.arcTo(
+            dx,
+            dy,
+            dx + width,
+            dy,
+            r
+        );
+
+
+        const holeRadius =
+            Math.max(
+                4,
+                size * 0.035
+            );
+
+        const holeY =
+            dy + size * 0.14;
+
+
+        context.moveTo(
+            cx + holeRadius,
+            holeY
+        );
+
+        context.arc(
+            cx,
+            holeY,
+            holeRadius,
+            0,
+            Math.PI * 2
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   IMAGE FILTER
+   ========================================================= */
+
+function getFilter() {
+
+    const brightness =
+        brightnessSlider.value;
+
+    const contrast =
+        contrastSlider.value;
+
+
+    const filters = [];
+
+
+    filters.push(
+        `brightness(${brightness}%)`
+    );
+
+    filters.push(
+        `contrast(${contrast}%)`
+    );
+
+
+    if (grayscaleInput.checked) {
+
+        filters.push(
+            "grayscale(100%)"
+        );
+
+    }
+
+
+    if (invertInput.checked) {
+
+        filters.push(
+            "invert(100%)"
+        );
+
+    }
+
+
+    return filters.join(" ");
+
+}
+
+
+/* =========================================================
+   DRAW IMAGE
+   ========================================================= */
+
+function drawImageTransformed(
+    context,
+    targetWidth,
+    targetHeight
+) {
+
+    if (!imageLoaded) {
+        return;
+    }
+
+
+    context.save();
+
+
+    context.translate(
+        imgX,
+        imgY
+    );
+
+
+    context.rotate(
+        rotation
+    );
+
+
+    context.scale(
+        flipH,
+        flipV
+    );
+
+
+    context.filter =
+        getFilter();
+
+
+    context.drawImage(
+        img,
+
+        -(
+            img.width *
+            scale
+        ) / 2,
+
+        -(
+            img.height *
+            scale
+        ) / 2,
+
+        img.width * scale,
+        img.height * scale
+    );
+
+
+    context.restore();
+
+}
+
+
+/* =========================================================
+   MAIN DRAW
+   ========================================================= */
+
+function draw() {
+
+    ctx.clearRect(
+        0,
+        0,
+        CANVAS_SIZE,
+        CANVAS_SIZE
+    );
+
+
+    ctx.save();
+
+
+    buildShapePath(
+        ctx,
+        cropSize,
+        cornerRadius,
+        shapeSel.value
+    );
+
+
+    ctx.clip("evenodd");
+
+
+    if (imageLoaded) {
+
+        drawImageTransformed(
+            ctx,
+            CANVAS_SIZE,
+            CANVAS_SIZE
+        );
+
+    }
+
+
+    ctx.restore();
+
+
+    ctx.save();
+
+
+    buildShapePath(
+        ctx,
+        cropSize,
+        cornerRadius,
+        shapeSel.value
+    );
+
+
+    ctx.strokeStyle =
+        "#00ffcc";
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+
+    ctx.restore();
+
+
+    updateOutputInfo();
+
+}
+
+
+/* =========================================================
+   FIT IMAGE
+   ========================================================= */
+
+function fitImage() {
+
+    if (!imageLoaded) {
+        return;
+    }
+
+
+    const rotated =
+        Math.abs(
+            Math.round(
+                rotation /
+                (Math.PI / 2)
+            )
+        ) % 2;
+
+
+    const width =
+        rotated
+            ? img.height
+            : img.width;
+
+    const height =
+        rotated
+            ? img.width
+            : img.height;
+
+
+    baseScale =
+        Math.max(
+            cropSize / width,
+            cropSize / height
+        );
+
+
+    scale =
+        baseScale;
+
+
+    zoomSlider.value =
+        Math.min(
+            5,
+            Math.max(
+                0.05,
+                scale
+            )
+        );
+
+
+    imgX =
+        CANVAS_SIZE / 2;
+
+    imgY =
+        CANVAS_SIZE / 2;
+
+
+    updateZoomDisplay();
+
+    draw();
+
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+function resetImage() {
+
+    rotation = 0;
+
+    flipH = 1;
+
+    flipV = 1;
+
+    brightnessSlider.value = 100;
+
+    contrastSlider.value = 100;
+
+    grayscaleInput.checked = false;
+
+    invertInput.checked = false;
+
+    cornerRadius = 40;
+
+    radiusSlider.value = 40;
+
+
+    brightnessValue.textContent =
+        "100%";
+
+    contrastValue.textContent =
+        "100%";
+
+    radiusValue.textContent =
+        "40";
+
+
+    if (imageLoaded) {
+
+        fitImage();
+
+    } else {
+
+        draw();
+
+    }
+
+}
+
+
+/* =========================================================
+   ZOOM DISPLAY
+   ========================================================= */
+
+function updateZoomDisplay() {
+
+    zoomValue.textContent =
+        `${parseFloat(scale).toFixed(2)}×`;
+
+}
+
+
+/* =========================================================
+   OUTPUT INFORMATION
+   ========================================================= */
+
+function updateOutputInfo() {
+
+    const px =
+        Math.round(cropSize);
+
+    const mm =
+        pxToMm(px).toFixed(2);
+
+    const shape =
+        shapeSel.value;
+
+
+    let label;
+
+
+    switch (shape) {
+
+        case "circle":
+            label = "Ø";
+            break;
+
+        case "square":
+            label = "□";
+            break;
+
+        case "rounded":
+            label = "Rounded";
+            break;
+
+        case "heart":
+            label = "♥";
+            break;
+
+        case "star":
+            label = "★";
+            break;
+
+        case "dogtag":
+            label = "Dog Tag";
+            break;
+
+        default:
+            label = "Shape";
+
+    }
+
+
+    outputInfo.innerHTML =
+        `
+        <strong>${label}</strong><br>
+        ${px} × ${px} px<br>
+        ${mm} × ${mm} mm<br>
+        ${getDPI()} DPI
+        `;
+
+
+    sizeSliderValue.textContent =
+        px;
+
+
+    zoomValue.textContent =
+        `${parseFloat(scale).toFixed(2)}×`;
+
+}
+
+
+/* =========================================================
+   SHAPE UI
+   ========================================================= */
+
+function updateShapeControls() {
+
+    radiusSection.classList.toggle(
+        "hidden",
+        !(
+            shapeSel.value === "rounded" ||
+            shapeSel.value === "dogtag"
+        )
+    );
+
+
+    starSection.classList.toggle(
+        "hidden",
+        shapeSel.value !== "star"
+    );
+
+
+    draw();
+
+}
+
+
+/* =========================================================
+   FILE LOAD
+   ========================================================= */
+
+fileInput.addEventListener(
+    "change",
+    event => {
+
+        const file =
+            event.target.files[0];
+
+
+        if (!file) {
+            return;
+        }
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            () => {
+
+                img.onload =
+                    () => {
+
+                        imageLoaded =
+                            true;
+
+                        fitImage();
+
+                    };
+
+
+                img.src =
+                    reader.result;
+
+            };
+
+
+        reader.readAsDataURL(
+            file
+        );
+
+    }
+);
+
+
+/* =========================================================
+   ZOOM SLIDER
+   ========================================================= */
+
+zoomSlider.addEventListener(
+    "input",
+    () => {
+
+        scale =
+            parseFloat(
+                zoomSlider.value
+            );
+
+
+        updateZoomDisplay();
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   MOUSE WHEEL ZOOM
+   ========================================================= */
+
+canvas.addEventListener(
+    "wheel",
+    event => {
+
+        event.preventDefault();
+
+
+        if (!imageLoaded) {
+            return;
+        }
+
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+
+        const mouseX =
+            (
+                event.clientX -
+                rect.left
+            ) *
+            (
+                CANVAS_SIZE /
+                rect.width
+            );
+
+
+        const mouseY =
+            (
+                event.clientY -
+                rect.top
+            ) *
+            (
+                CANVAS_SIZE /
+                rect.height
+            );
+
+
+        const oldScale =
+            scale;
+
+
+        const factor =
+            event.deltaY < 0
+                ? 1.08
+                : 0.925;
+
+
+        scale =
+            Math.max(
+                0.05,
+                Math.min(
+                    5,
+                    scale * factor
+                )
+            );
+
+
+        imgX =
+            mouseX -
+            (
+                mouseX -
+                imgX
+            ) *
+            (
+                scale /
+                oldScale
+            );
+
+
+        imgY =
+            mouseY -
+            (
+                mouseY -
+                imgY
+            ) *
+            (
+                scale /
+                oldScale
+            );
+
+
+        zoomSlider.value =
+            scale;
+
+
+        updateZoomDisplay();
+
+        draw();
+
+    },
+    {
+        passive: false
+    }
+);
+
+
+/* =========================================================
+   SIZE SLIDER
+   ========================================================= */
+
+sizeSlider.addEventListener(
+    "input",
+    () => {
+
+        cropSize =
+            parseInt(
+                sizeSlider.value
+            );
+
+
+        sizeNumber.value =
+            sizeUnit.value === "mm"
+                ? pxToMm(
+                    cropSize
+                ).toFixed(2)
+                : cropSize;
+
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   SIZE NUMBER
+   ========================================================= */
+
+sizeNumber.addEventListener(
+    "input",
+    () => {
+
+        const value =
+            parseFloat(
+                sizeNumber.value
+            );
+
+
+        if (
+            isNaN(value) ||
+            value <= 0
+        ) {
+            return;
+        }
+
+
+        let px =
+            sizeUnit.value === "mm"
+                ? mmToPx(value)
+                : value;
+
+
+        cropSize =
+            Math.max(
+                10,
+                Math.min(
+                    CANVAS_SIZE,
+                    Math.round(px)
+                )
+            );
+
+
+        sizeSlider.value =
+            cropSize;
+
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   UNIT CHANGE
+   ========================================================= */
+
+sizeUnit.addEventListener(
+    "change",
+    () => {
+
+        sizeNumber.value =
+            sizeUnit.value === "mm"
+                ? pxToMm(
+                    cropSize
+                ).toFixed(2)
+                : cropSize;
+
+
+        updateOutputInfo();
+
+    }
+);
+
+
+/* =========================================================
+   DPI
+   ========================================================= */
+
+dpiInput.addEventListener(
+    "input",
+    () => {
+
+        if (
+            sizeUnit.value === "mm"
+        ) {
+
+            const mm =
+                parseFloat(
+                    sizeNumber.value
+                );
+
+
+            if (!isNaN(mm)) {
+
+                cropSize =
+                    Math.max(
+                        10,
+                        Math.min(
+                            CANVAS_SIZE,
+                            Math.round(
+                                mmToPx(mm)
+                            )
+                        )
+                    );
+
+
+                sizeSlider.value =
+                    cropSize;
+
+            }
+
+        }
+
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   RADIUS
+   ========================================================= */
+
+radiusSlider.addEventListener(
+    "input",
+    () => {
+
+        cornerRadius =
+            parseInt(
+                radiusSlider.value
+            );
+
+
+        radiusValue.textContent =
+            cornerRadius;
+
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   STAR POINTS
+   ========================================================= */
+
+starPointsInput.addEventListener(
+    "input",
+    () => {
+
+        starPointsValue.textContent =
+            starPointsInput.value;
+
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   BRIGHTNESS
+   ========================================================= */
+
+brightnessSlider.addEventListener(
+    "input",
+    () => {
+
+        brightnessValue.textContent =
+            `${brightnessSlider.value}%`;
+
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   CONTRAST
+   ========================================================= */
+
+contrastSlider.addEventListener(
+    "input",
+    () => {
+
+        contrastValue.textContent =
+            `${contrastSlider.value}%`;
+
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   CHECKBOXES
+   ========================================================= */
+
+grayscaleInput.addEventListener(
+    "change",
+    draw
+);
+
+invertInput.addEventListener(
+    "change",
+    draw
+);
+
+transparentInput.addEventListener(
+    "change",
+    draw
+);
+
+
+/* =========================================================
+   SHAPE CHANGE
+   ========================================================= */
+
+shapeSel.addEventListener(
+    "change",
+    () => {
+
+        updateShapeControls();
+
+    }
+);
+
+
+/* =========================================================
+   FIT BUTTON
+   ========================================================= */
+
+fitBtn.addEventListener(
+    "click",
+    () => {
+
+        fitImage();
+
+    }
+);
+
+
+/* =========================================================
+   RESET BUTTON
+   ========================================================= */
+
+resetBtn.addEventListener(
+    "click",
+    () => {
+
+        resetImage();
+
+    }
+);
+
+
+/* =========================================================
+   ROTATE
+   ========================================================= */
+
+rotateBtn.addEventListener(
+    "click",
+    () => {
+
+        rotation +=
+            Math.PI / 2;
+
+
+        if (
+            rotation >=
+            Math.PI * 2
+        ) {
+
+            rotation -=
+                Math.PI * 2;
+
+        }
+
+
+        fitImage();
+
+    }
+);
+
+
+/* =========================================================
+   FLIP HORIZONTAL
+   ========================================================= */
+
+flipHBtn.addEventListener(
+    "click",
+    () => {
+
+        flipH *= -1;
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   FLIP VERTICAL
+   ========================================================= */
+
+flipVBtn.addEventListener(
+    "click",
+    () => {
+
+        flipV *= -1;
+
+        draw();
+
+    }
+);
+
+
+/* =========================================================
+   MOUSE DRAG
+   ========================================================= */
+
+canvas.addEventListener(
+    "mousedown",
+    event => {
+
+        if (!imageLoaded) {
+            return;
+        }
+
+
+        dragging = true;
+
+
+        lastX =
+            event.clientX;
+
+        lastY =
+            event.clientY;
+
+
+        canvas.classList.add(
+            "grabbing"
+        );
+
+    }
+);
+
+
+window.addEventListener(
+    "mousemove",
+    event => {
+
+        if (!dragging) {
+            return;
+        }
+
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+
+        const scaleX =
+            CANVAS_SIZE /
+            rect.width;
+
+        const scaleY =
+            CANVAS_SIZE /
+            rect.height;
+
+
+        imgX +=
+            (
+                event.clientX -
+                lastX
+            ) *
+            scaleX;
+
+
+        imgY +=
+            (
+                event.clientY -
+                lastY
+            ) *
+            scaleY;
+
+
+        lastX =
+            event.clientX;
+
+        lastY =
+            event.clientY;
+
+
+        draw();
+
+    }
+);
+
+
+window.addEventListener(
+    "mouseup",
+    () => {
+
+        dragging = false;
+
+        canvas.classList.remove(
+            "grabbing"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   HIGH RESOLUTION EXPORT
+   ========================================================= */
+
+exportBtn.addEventListener(
+    "click",
+    () => {
+
+        if (!imageLoaded) {
+
+            alert(
+                "Please load an image first."
+            );
+
+            return;
+
+        }
+
+
+        const dpi =
+            getDPI();
+
+
+        let exportSize;
+
+
+        if (
+            sizeUnit.value === "mm"
+        ) {
+
+            const mm =
+                parseFloat(
+                    sizeNumber.value
+                );
+
+
+            exportSize =
+                Math.max(
+                    1,
+                    Math.round(
+                        mmToPx(mm)
+                    )
+                );
+
+        } else {
+
+            exportSize =
+                Math.max(
+                    1,
+                    Math.round(
+                        cropSize
+                    )
+                );
+
+        }
+
+
+        const out =
+            document.createElement(
+                "canvas"
+            );
+
+
+        out.width =
+            exportSize;
+
+        out.height =
+            exportSize;
+
+
+        const octx =
+            out.getContext("2d");
+
+
+        if (
+            !transparentInput.checked
+        ) {
+
+            octx.fillStyle =
+                "#ffffff";
+
+            octx.fillRect(
+                0,
+                0,
+                exportSize,
+                exportSize
+            );
+
+        }
+
+
+        const exportScale =
+            exportSize /
+            CANVAS_SIZE;
+
+
+        octx.save();
+
+
+        octx.scale(
+            exportScale,
+            exportScale
+        );
+
+
+        buildShapePath(
+            octx,
+            cropSize,
+            cornerRadius,
+            shapeSel.value
+        );
+
+
+        octx.clip(
+            "evenodd"
+        );
+
+
+        octx.save();
+
+
+        octx.translate(
+            imgX,
+            imgY
+        );
+
+
+        octx.rotate(
+            rotation
+        );
+
+
+        octx.scale(
+            flipH,
+            flipV
+        );
+
+
+        octx.filter =
+            getFilter();
+
+
+        octx.drawImage(
+            img,
+
+            -(
+                img.width *
+                scale
+            ) / 2,
+
+            -(
+                img.height *
+                scale
+            ) / 2,
+
+            img.width *
+            scale,
+
+            img.height *
+            scale
+        );
+
+
+        octx.restore();
+
+        octx.restore();
+
+
+        const shapeName =
+            shapeSel.value
+                .replace(
+                    /\s+/g,
+                    "-"
+                );
+
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        link.download =
+            `laser-${shapeName}-${exportSize}px.png`;
+
+
+        link.href =
+            out.toDataURL(
+                "image/png"
+            );
+
+
+        link.click();
+
+    }
+);
+
+
+/* =========================================================
+   KEYBOARD SHORTCUTS
+   ========================================================= */
+
+window.addEventListener(
+    "keydown",
+    event => {
+
+        const tag =
+            document.activeElement.tagName;
+
+
+        if (
+            tag === "INPUT" ||
+            tag === "SELECT" ||
+            tag === "TEXTAREA"
+        ) {
+
+            return;
+
+        }
+
+
+        const key =
+            event.key.toLowerCase();
+
+
+        if (key === "r") {
+
+            rotation +=
+                Math.PI / 2;
+
+
+            if (
+                rotation >=
+                Math.PI * 2
+            ) {
+
+                rotation -=
+                    Math.PI * 2;
+
+            }
+
+
+            fitImage();
+
+        }
+
+
+        if (key === "h") {
+
+            flipH *= -1;
+
+            draw();
+
+        }
+
+
+        if (key === "v") {
+
+            flipV *= -1;
+
+            draw();
+
+        }
+
+
+        if (key === "f") {
+
+            fitImage();
+
+        }
+
+
+        if (key === "0") {
+
+            resetImage();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   INITIALISE
+   ========================================================= */
+
+updateShapeControls();
+
+updateOutputInfo();
+
+updateZoomDisplay();
+
+</script>
+
+</body>
+</html>
+
